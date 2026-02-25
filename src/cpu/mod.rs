@@ -2,6 +2,12 @@
 
 use std::io;
 use crate::bus::BUS;
+pub mod flags;
+
+const Z_FLAG: u16 = 0x0080;
+const N_FLAG: u16 = 0x0040;
+const H_FLAG: u16 = 0x0020;
+const C_FLAG: u16 = 0x0010;
 
 /// Representation of the Sharp LR35902 used in the GameBoy
 /// The CPU contains 6 registers an opcode table and the main memory of the system
@@ -49,6 +55,11 @@ impl CPU {
         //return CPU;
     }
 
+    // temp set to pub for testing
+    pub fn flip_flag(&mut self, flag: u16){
+        self.af ^= flag;
+    }
+
     fn fetch_u8(&mut self) -> u8 {
         //let byte = self.memory.read_mem([self.pc as usize]);
         let byte = self.bus.read(self.pc);
@@ -60,6 +71,24 @@ impl CPU {
         let low = self.fetch_u8() as u16;
         let high = self.fetch_u8() as u16;
         return (high<<8) | low;
+    }
+
+    fn fetch_register_high(&mut self, register: u16) -> u8 {
+        let value = (register >> 8) as u8;
+        return value;
+    }
+
+    fn fetch_register_low(&mut self, register: u16) -> u8 {
+        let value = (register & 0x00FF) as u8;
+        return value;
+    }
+
+    fn set_register_high(&mut self, register: &mut u16, data: u8) {
+        *register = (*register & 0x00FF) | (data as u16) << 8;
+    }
+
+    fn set_register_low(&mut self, register: &mut u16, data: u8) {
+        *register = (*register & 0xFF00) | (data as u16);
     }
 
     fn execute(&mut self, opcode: u8) {
