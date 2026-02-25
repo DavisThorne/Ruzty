@@ -25,7 +25,19 @@ impl CPU {
     }
     pub fn op_ld_b_b(&mut self){
         let data = self.fetch_register_high(self.bc);
-        self.bc = (self.bc & 0x00FF) | ((data as u16) << 8);
+        CPU::set_register_high(&mut self.bc, data);
+    }
+    pub fn op_ld_d_b(&mut self){
+        let data = self.fetch_register_high(self.bc);
+        CPU::set_register_high(&mut self.de, data);
+    }
+    pub fn op_ld_h_b(&mut self){
+        let data = self.fetch_register_high(self.bc);
+        CPU::set_register_high(&mut self.hl, data);
+    }
+    pub fn op_ld_hl_b(&mut self){
+        let data = self.fetch_register_high(self.bc);
+        self.bus.write(self.hl, data);
     }
     pub fn op_ld_bc_d16(&mut self){
         //let param = ((self.memory[(self.pc+1) as usize] as u16) << 8) | self.memory[(self.pc) as usize] as u16;
@@ -51,6 +63,8 @@ impl CPU {
         self.opcode_table[0x10] = CPU::op_stop;
         self.opcode_table[0x20] = CPU::op_jr_nz_s8;
         self.opcode_table[0x30] = CPU::op_jr_nc_s8;
+        self.opcode_table[0x40] = CPU::op_ld_b_b;
+        self.opcode_table[0x50] = CPU::op_ld_d_b;
         self.opcode_table[0x01] = CPU::op_ld_bc_d16;
         self.opcode_table[0x11] = CPU::op_ld_de_d16;
         self.opcode_table[0x21] = CPU::op_ld_hl_d16;

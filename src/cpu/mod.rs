@@ -17,11 +17,11 @@ pub struct CPU {
     pc: u16,    //Program Counter
     /// The AF register is 2, u8 bit registers combined into 1, u16 bit register responsible for the Accumulator (High 8 bits) and the CPU flags (Low 8 bits)
     af: u16,    //Accumulator&Flags Hi=Accumulator Lo=Flags
-    /// The BC register is 2, u8 bit registers combined into 1, u16 bit register where the higher 8 bits are the B register and hte lower 8 bits are the C register
+    /// The BC register is 2, u8 bit registers combined into 1, u16 bit register where the higher 8 bits are the B register and the lower 8 bits are the C register
     bc: u16,    //B&C Hi=B Lo=C
-    /// The BC register is 2, u8 bit registers combined into 1, u16 bit register where the higher 8 bits are the D register and hte lower 8 bits are the E register
+    /// The BC register is 2, u8 bit registers combined into 1, u16 bit register where the higher 8 bits are the D register and the lower 8 bits are the E register
     de: u16,    //D&E Hi=D Lo=E
-    /// The BC register is 2, u8 bit registers combined into 1, u16 bit register where the higher 8 bits are the H register and hte lower 8 bits are the L register
+    /// The BC register is 2, u8 bit registers combined into 1, u16 bit register where the higher 8 bits are the H register and the lower 8 bits are the L register
     hl: u16,    //H&L Hi=H Lo=L
     /// The SP register is 1, u16 bit register that stores the memory address for the top of the stack, it automatically decrements instelf before pushing something onto the stack and vice versa with popping on the stack
     sp: u16,     //Stack Pointer
@@ -52,7 +52,6 @@ impl CPU {
             bus: bus,
             opcode_table: [CPU::op_null; 256]
         }
-        //return CPU;
     }
 
     // temp set to pub for testing
@@ -83,11 +82,11 @@ impl CPU {
         return value;
     }
 
-    fn set_register_high(&mut self, register: &mut u16, data: u8) {
+    fn set_register_high(register: &mut u16, data: u8) {
         *register = (*register & 0x00FF) | (data as u16) << 8;
     }
 
-    fn set_register_low(&mut self, register: &mut u16, data: u8) {
+    fn set_register_low(register: &mut u16, data: u8) {
         *register = (*register & 0xFF00) | (data as u16);
     }
 
@@ -103,14 +102,14 @@ impl CPU {
             while !self.stop {
                 let opcode = self.fetch_u8();
                 println!("
-                    Opcode: 0x{:02X}
-                    PC:0x{:04X}
-                    AF:{}
-                    BC:{}
-                    DE:{}
-                    HL:{}
-                    SP{}",
-                    opcode,self.pc,self.af,(self.bc),self.de,self.hl,self.sp);
+                    Opcode: {o:#02X}
+                    PC: {pc:#04X} : {pc}
+                    AF: {af:#04X} : {af}
+                    BC: {bc:#04X} : {bc}
+                    DE: {de:#04X} : {de}
+                    HL: {hl:#04X} : {hl}
+                    SP: {sp:#04X} : {sp}",
+                    o=opcode,pc=self.pc,af=self.af,bc=self.bc,de=self.de,hl=self.hl,sp=self.sp);
                 wait_for_enter(); 
                 //let opcode = self.fetch_u8();
                 self.execute(opcode);        

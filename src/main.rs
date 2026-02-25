@@ -5,9 +5,9 @@ mod bus;
 
 fn main() {
     println!("Hello, world!");
-    let program: Vec<u8> = vec![0x01, 0x11, 0x11, 
-                                0x11, 0x01, 0x01,
-                                0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    let program: Vec<u8> = vec![0x01, 0x11, 0x11,
+                                0x40,
+                                0x50,
                                 0x10];
     let memory = crate::memory::MEMORY::new();
     let bus = crate::bus::BUS::new(memory);
