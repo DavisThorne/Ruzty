@@ -1,11 +1,11 @@
 pub struct MEMORY {
-    memory: [u8; 0xFFFF]
+    memory: [u8; 0x10000],
 }
 
 impl MEMORY {
     pub fn new() -> Self {
-        MEMORY{
-            memory: [0x00; 0xFFFF]
+        MEMORY {
+            memory: [0x00; 0x10000],
         }
     }
 
@@ -18,7 +18,7 @@ impl MEMORY {
     }
 
     pub fn load(&mut self, program: Vec<u8>) {
-        self.memory[0x0000 .. (0x0000 + program.len())].copy_from_slice(&program[..]);
+        self.memory[0x0000..(0x0000 + program.len())].copy_from_slice(&program[..]);
         //self.pc = 0x0000
     }
 }
