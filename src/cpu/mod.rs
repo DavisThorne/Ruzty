@@ -2,6 +2,7 @@
 use std::io;
 pub mod flags;
 mod opcodes;
+mod registers;
 use crate::bus::BUS;
 use crate::cpu::flags::*;
 
@@ -48,7 +49,7 @@ impl CPU {
             bc: 0,
             de: 0,
             hl: 0,
-            sp: 0,
+            sp: 0xFFFE,
             stop: false,
             bus: bus,
             opcode_table: [CPU::op_null; 256],
@@ -68,12 +69,58 @@ impl CPU {
         self.af &= !flag;
     }
 
-    fn check_hc(&mut self, a: u8, b: u8, data: u8) {
+    fn check_z(&mut self, data: u8) {
+        if data == 0x00 {
+            self.set_flag(Z_FLAG);
+        } else {
+            self.clear_flag(Z_FLAG);
+        }
+    }
+
+    fn check_hc_add(&mut self, a: u8, b: u8, data: u8) {
         if ((a ^ b ^ data) & 0x10) != 0 {
             self.set_flag(H_FLAG);
         } else {
             self.clear_flag(H_FLAG);
         }
+    }
+
+    fn check_hc_sub(&mut self, a: u8, b: u8, data: u8) {
+        if (a & 0x0F) < (b & 0x0F) {
+            self.set_flag(H_FLAG);
+        } else {
+            self.clear_flag(H_FLAG);
+        }
+    }
+
+    fn check_c(&mut self, carried: bool) {
+        if carried == true {
+            self.set_flag(C_FLAG);
+        } else {
+            self.clear_flag(C_FLAG);
+        }
+    }
+
+    fn check_flag_set(&self, flag: u16) -> bool {
+        (self.af & flag) != 0
+    }
+
+    fn push(&mut self, register: u16) {
+        let high = registers::fetch_register_high(register);
+        let low = registers::fetch_register_low(register);
+        self.sp = self.sp.wrapping_sub(1);
+        self.bus.write(self.sp, high);
+        self.sp = self.sp.wrapping_sub(1);
+        self.bus.write(self.sp, low);
+    }
+
+    fn pop(&mut self) -> u16 {
+        let low = self.bus.read(self.sp) as u16;
+        self.sp = self.sp.wrapping_add(1);
+        let high = self.bus.read(self.sp) as u16;
+        self.sp = self.sp.wrapping_add(1);
+
+        return (high << 8) | low;
     }
 
     fn fetch_u8(&mut self) -> u8 {
@@ -87,24 +134,6 @@ impl CPU {
         let low = self.fetch_u8() as u16;
         let high = self.fetch_u8() as u16;
         return (high << 8) | low;
-    }
-
-    fn fetch_register_high(&mut self, register: u16) -> u8 {
-        let value = (register >> 8) as u8;
-        return value;
-    }
-
-    fn fetch_register_low(&mut self, register: u16) -> u8 {
-        let value = (register & 0x00FF) as u8;
-        return value;
-    }
-
-    fn set_register_high(register: &mut u16, data: u8) {
-        *register = (*register & 0x00FF) | (data as u16) << 8;
-    }
-
-    fn set_register_low(register: &mut u16, data: u8) {
-        *register = (*register & 0xFF00) | (data as u16);
     }
 
     fn execute(&mut self, opcode: u8) {
