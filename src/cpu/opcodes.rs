@@ -1,8 +1,6 @@
 use super::CPU;
-//use crate::cpu::flags::H_FLAG;
-//use crate::cpu::flags::*;
-use crate::cpu::registers::fetch_register_high;
-use crate::cpu::registers::{self, set_register_high};
+use super::flags;
+use super::registers;
 
 #[doc(hidden)]
 impl CPU {
@@ -19,12 +17,12 @@ impl CPU {
         self.stop = true;
     }
     pub fn op_jr_nz_s8(&mut self) {
-        if (self.af & crate::cpu::flags::Z_FLAG) == 0 {
+        if (self.af & flags::Z_FLAG) == 0 {
             self.pc += 0x07; // only jump by 7 because cpu.fetch increments PC by 1
         }
     }
     pub fn op_jr_nc_s8(&mut self) {
-        if (self.af & crate::cpu::flags::C_FLAG) == 0 {
+        if (self.af & flags::C_FLAG) == 0 {
             self.pc += 0x07;
         }
     }
@@ -57,7 +55,7 @@ impl CPU {
         self.check_z(data);
         self.check_hc_add(a, b, data);
         self.check_c(carried);
-        self.clear_flag(crate::cpu::flags::N_FLAG);
+        self.clear_flag(flags::N_FLAG);
         registers::set_register_high(&mut self.af, data);
     }
 
@@ -68,7 +66,7 @@ impl CPU {
         self.check_z(data);
         self.check_hc_sub(a, b, data);
         self.check_c(carried);
-        self.set_flag(crate::cpu::flags::N_FLAG);
+        self.set_flag(flags::N_FLAG);
         registers::set_register_high(&mut self.af, data);
     }
 
@@ -76,7 +74,7 @@ impl CPU {
         let a = registers::fetch_register_high(self.af);
         let b = registers::fetch_register_high(self.bc);
         let data = b & a;
-        self.clear_flag(crate::cpu::flags::H_FLAG);
+        self.clear_flag(flags::H_FLAG);
         self.check_z(data);
         registers::set_register_high(&mut self.af, data);
     }
@@ -86,20 +84,20 @@ impl CPU {
         let b = registers::fetch_register_high(self.bc);
         let data = b | a;
         self.check_z(data);
-        self.clear_flag(crate::cpu::flags::N_FLAG);
-        self.clear_flag(crate::cpu::flags::H_FLAG);
-        self.clear_flag(crate::cpu::flags::C_FLAG);
+        self.clear_flag(flags::N_FLAG);
+        self.clear_flag(flags::H_FLAG);
+        self.clear_flag(flags::C_FLAG);
         registers::set_register_high(&mut self.af, data);
     }
 
     pub fn op_ret_nz(&mut self) {
-        if !self.check_flag_set(crate::cpu::flags::Z_FLAG) {
+        if !self.check_flag_set(flags::Z_FLAG) {
             self.pc = self.pop();
         }
     }
 
     pub fn op_ret_nc(&mut self) {
-        if !self.check_flag_set(crate::cpu::flags::C_FLAG) {
+        if !self.check_flag_set(flags::C_FLAG) {
             self.pc = self.pop();
         }
     }

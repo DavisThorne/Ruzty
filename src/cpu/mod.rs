@@ -1,15 +1,9 @@
 #[doc(inline)]
 use std::io;
-pub mod flags;
+mod flags;
 mod opcodes;
 mod registers;
 use crate::bus::BUS;
-use crate::cpu::flags::*;
-
-// const Z_FLAG: u16 = 0x0080;
-// const N_FLAG: u16 = 0x0040;
-// const H_FLAG: u16 = 0x0020;
-// const C_FLAG: u16 = 0x0010;
 
 /// Representation of the Sharp LR35902 used in the GameBoy
 /// The CPU contains 6 registers an opcode table and the main memory of the system
@@ -71,33 +65,33 @@ impl CPU {
 
     fn check_z(&mut self, data: u8) {
         if data == 0x00 {
-            self.set_flag(Z_FLAG);
+            self.set_flag(flags::Z_FLAG);
         } else {
-            self.clear_flag(Z_FLAG);
+            self.clear_flag(flags::Z_FLAG);
         }
     }
 
     fn check_hc_add(&mut self, a: u8, b: u8, data: u8) {
         if ((a ^ b ^ data) & 0x10) != 0 {
-            self.set_flag(H_FLAG);
+            self.set_flag(flags::H_FLAG);
         } else {
-            self.clear_flag(H_FLAG);
+            self.clear_flag(flags::H_FLAG);
         }
     }
 
     fn check_hc_sub(&mut self, a: u8, b: u8, data: u8) {
         if (a & 0x0F) < (b & 0x0F) {
-            self.set_flag(H_FLAG);
+            self.set_flag(flags::H_FLAG);
         } else {
-            self.clear_flag(H_FLAG);
+            self.clear_flag(flags::H_FLAG);
         }
     }
 
     fn check_c(&mut self, carried: bool) {
         if carried == true {
-            self.set_flag(C_FLAG);
+            self.set_flag(flags::C_FLAG);
         } else {
-            self.clear_flag(C_FLAG);
+            self.clear_flag(flags::C_FLAG);
         }
     }
 
