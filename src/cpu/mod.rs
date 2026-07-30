@@ -3,7 +3,13 @@ use std::io;
 mod flags;
 mod opcodes;
 mod registers;
-use crate::bus::BUS;
+use crate::{
+    bus::BUS,
+    cpu::{
+        opcodes::{AluOp, decode_alu_operation},
+        registers::decode_r8,
+    },
+};
 
 /// Representation of the Sharp LR35902 used in the GameBoy
 /// The CPU contains 6 registers an opcode table and the main memory of the system
@@ -79,7 +85,7 @@ impl CPU {
         }
     }
 
-    fn check_hc_sub(&mut self, a: u8, b: u8, data: u8) {
+    fn check_hc_sub(&mut self, a: u8, b: u8, _data: u8) {
         if (a & 0x0F) < (b & 0x0F) {
             self.set_flag(flags::H_FLAG);
         } else {
@@ -130,10 +136,42 @@ impl CPU {
         return (high << 8) | low;
     }
 
+    fn dispatch_alu(&mut self, operation: AluOp, src: u8) {
+        match operation {
+            AluOp::ADD => self.op_add_r8(src),
+            AluOp::ADC => self.op_adc_r8(src),
+        }
+    }
+
+    fn execute_alu_operation(&mut self, opcode: u8) {
+        let operation = decode_alu_operation(opcode);
+        let register_index = decode_r8(opcode);
+        let register = self.get_r8(register_index);
+    }
+
     fn execute(&mut self, opcode: u8) {
+        match opcode {
+            0x76 => println!("HALT Opcode Found: {opcode:#02X}"),
+            0x04 | 0x14 | 0x24 | 0x34 | 0x0C | 0x1C | 0x2C | 0x3C => {
+                println!("ALU INC Opcode Found: {opcode:#02X}")
+            }
+            0x05 | 0x15 | 0x25 | 0x35 | 0x0D | 0x1D | 0x2D | 0x3C => {
+                println!("ALU DEC Opcode Found: {opcode:#02X}")
+            }
+            0xC6 | 0xD6 | 0xE6 | 0xF6 | 0xCE | 0xDE | 0xEE | 0xFE => {
+                println!("ALU Opcode Found: {opcode:#02X}")
+            }
+            0x80..=0xBF => println!("ALU Opcode Found: {opcode:#02X}"),
+            0x40..=0x7F => println!("LD Opcode Found: {opcode:#02X}"),
+            _ => println!("Unknown Opcode: {opcode:#02X}"),
+        }
+        let alu_op = opcodes::decode_alu_operation(opcode);
+        println!("ALU Operation: {:?}", alu_op);
+
         let handler = self.opcode_table[opcode as usize];
         handler(self);
     }
+
     /// Run
     pub fn run(&mut self, debug: bool) {
         self.pc = 0x0000;
