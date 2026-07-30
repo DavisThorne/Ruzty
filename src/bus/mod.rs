@@ -1,14 +1,12 @@
 use crate::memory::MEMORY;
 
 pub struct BUS {
-    memory: MEMORY
+    memory: MEMORY,
 }
 
 impl BUS {
     pub fn new(memory: MEMORY) -> Self {
-        BUS {
-            memory: memory
-        }
+        BUS { memory: memory }
     }
     pub fn read(&mut self, addr: u16) -> u8 {
         return self.memory.read_mem(addr);
