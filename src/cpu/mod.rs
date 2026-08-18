@@ -7,7 +7,7 @@ use crate::{
     bus::BUS,
     cpu::{
         opcodes::{AluOp, decode_alu_operation},
-        registers::decode_r8,
+        registers::{decode_r8_dst, decode_r8_src},
     },
 };
 
@@ -126,6 +126,7 @@ impl CPU {
     fn fetch_u8(&mut self) -> u8 {
         //let byte = self.memory.read_mem([self.pc as usize]);
         let byte = self.bus.read(self.pc);
+        println!("byte value: {byte:#02X}");
         self.pc += 1;
         return byte;
     }
@@ -140,13 +141,37 @@ impl CPU {
         match operation {
             AluOp::ADD => self.op_add_r8(src),
             AluOp::ADC => self.op_adc_r8(src),
+            AluOp::SUB => self.op_sub_r8(src),
+            AluOp::SBC => self.op_sbc_r8(src),
+            AluOp::AND => self.op_and_r8(src),
+            AluOp::OR => self.op_or_r8(src),
+            AluOp::XOR => self.op_xor_r8(src),
+            AluOp::CP => self.op_cp_r8(src),
+            _ => unreachable!(),
+        }
+    }
+
+    fn execute_ld_operation(&mut self, opcode: u8) {
+        if matches!(opcode, 0x06 | 0x16 | 0x26 | 0x36) {
+            println!("Edge case: {opcode:#02X}");
+            let dst_index = decode_r8_dst(opcode);
+            println!("dst_index: {dst_index:?}");
+            self.op_ld_r8_d8(dst_index);
+        } else {
+            println!("No edge case: {opcode:#02X}");
+            let dst_index = decode_r8_dst(opcode);
+            let src_index = decode_r8_src(opcode);
+            let src = self.get_r8(src_index);
+            self.op_ld_r8_r8(dst_index, src);
         }
     }
 
     fn execute_alu_operation(&mut self, opcode: u8) {
-        let operation = decode_alu_operation(opcode);
-        let register_index = decode_r8(opcode);
-        let register = self.get_r8(register_index);
+        let operation = decode_alu_operation(opcode); // gets instruction type as AluOp enum
+        let register_index = decode_r8_src(opcode); // gets register as R8 enum
+        let register = self.get_r8(register_index); // gets register value from R8 enum
+
+        self.dispatch_alu(operation, register);
     }
 
     fn execute(&mut self, opcode: u8) {
@@ -155,21 +180,32 @@ impl CPU {
             0x04 | 0x14 | 0x24 | 0x34 | 0x0C | 0x1C | 0x2C | 0x3C => {
                 println!("ALU INC Opcode Found: {opcode:#02X}")
             }
-            0x05 | 0x15 | 0x25 | 0x35 | 0x0D | 0x1D | 0x2D | 0x3C => {
+            0x05 | 0x15 | 0x25 | 0x35 | 0x0D | 0x1D | 0x2D | 0x3D => {
                 println!("ALU DEC Opcode Found: {opcode:#02X}")
             }
             0xC6 | 0xD6 | 0xE6 | 0xF6 | 0xCE | 0xDE | 0xEE | 0xFE => {
-                println!("ALU Opcode Found: {opcode:#02X}")
+                println!("ALU Opcode Found: {opcode:#02X}");
+                self.execute_alu_operation(opcode);
             }
-            0x80..=0xBF => println!("ALU Opcode Found: {opcode:#02X}"),
-            0x40..=0x7F => println!("LD Opcode Found: {opcode:#02X}"),
+            0x06 | 0x16 | 0x26 | 0x36 => {
+                println!("LD Opcode Found: {opcode:#02X}");
+                self.execute_ld_operation(opcode);
+            }
+            0x80..=0xBF => {
+                println!("ALU Opcode Found: {opcode:#02X}");
+                self.execute_alu_operation(opcode);
+            }
+            0x40..=0x7F => {
+                println!("LD Opcode Found: {opcode:#02X}");
+                self.execute_ld_operation(opcode);
+            }
             _ => println!("Unknown Opcode: {opcode:#02X}"),
         }
         let alu_op = opcodes::decode_alu_operation(opcode);
         println!("ALU Operation: {:?}", alu_op);
 
-        let handler = self.opcode_table[opcode as usize];
-        handler(self);
+        //let handler = self.opcode_table[opcode as usize];
+        //handler(self);
     }
 
     /// Run

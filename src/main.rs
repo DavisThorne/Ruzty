@@ -4,7 +4,7 @@ mod memory;
 
 fn main() {
     println!("Hello, world!");
-    let program: Vec<u8> = vec![0x01, 0x11, 0x11, 0x40, 0x50, 0x76, 0x10];
+    let program: Vec<u8> = vec![0x06, 0x3F, 0x80, 0x16, 0x1F, 0x92];
     let memory = crate::memory::MEMORY::new();
     let bus = crate::bus::BUS::new(memory);
     let mut cpu = crate::cpu::CPU::new(bus);

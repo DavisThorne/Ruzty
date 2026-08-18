@@ -17,8 +17,23 @@ pub enum R16 {
     SP,
 }
 
-pub fn decode_r8(operand: u8) -> R8 {
+pub fn decode_r8_src(operand: u8) -> R8 {
     let index = operand & 0b0000_0111;
+    match index {
+        0 => R8::B,
+        1 => R8::C,
+        2 => R8::D,
+        3 => R8::E,
+        4 => R8::H,
+        5 => R8::L,
+        6 => R8::HL,
+        7 => R8::A,
+        _ => unreachable!(),
+    }
+}
+
+pub fn decode_r8_dst(operand: u8) -> R8 {
+    let index = (operand & 0b0011_1000) >> 3;
     match index {
         0 => R8::B,
         1 => R8::C,

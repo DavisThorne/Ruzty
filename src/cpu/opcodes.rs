@@ -206,6 +206,24 @@ impl CPU {
         registers::set_register_high(&mut self.af, data);
     }
 
+    pub fn op_xor_r8(&mut self, src: u8) {
+        let a = registers::fetch_register_high(self.af);
+        let data = src ^ a;
+        self.check_z(data);
+        self.clear_flag(flags::N_FLAG);
+        self.clear_flag(flags::H_FLAG);
+        self.clear_flag(flags::C_FLAG);
+    }
+
+    pub fn op_cp_r8(&mut self, src: u8) {
+        let a = registers::fetch_register_high(self.af);
+        let (data, carried) = a.overflowing_sub(src);
+        self.check_c(carried);
+        self.check_hc_sub(a, src, data);
+        self.check_c(carried);
+        self.set_flag(flags::N_FLAG);
+    }
+
     pub fn op_ret_nz(&mut self) {
         if !self.check_flag_set(flags::Z_FLAG) {
             self.pc = self.pop();
